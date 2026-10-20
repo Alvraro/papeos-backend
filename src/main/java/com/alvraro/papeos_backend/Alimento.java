@@ -9,14 +9,14 @@ import jakarta.persistence.Table;
 @Table(name = "alimentos")
 public class Alimento {
 	@Id
-	private int id;
+	private Integer id;
 	
 	@Column(name = "nombre_alimento")
 	private String nombre;
 	
 	protected Alimento() {}
 
-	public Alimento(int id, String nombre) {
+	public Alimento(Integer id, String nombre) {
 		this.id = id;
 		this.nombre = nombre;
 	}
@@ -26,11 +26,11 @@ public class Alimento {
 		return "Alimento [id=" + id + ", nombre=" + nombre + "]";
 	}
 
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

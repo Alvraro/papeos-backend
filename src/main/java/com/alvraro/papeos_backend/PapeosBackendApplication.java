@@ -15,33 +15,4 @@ public class PapeosBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(PapeosBackendApplication.class, args);
 	}
-
-	@Bean
-	public CommandLineRunner demo(AlimentoRepository repository) {
-		return (args) -> {
-			// Save
-			repository.save(new Alimento(1, "Manzana"));
-			repository.save(new Alimento(2, "Banana"));
-			repository.save(new Alimento(3, "Cereza"));
-
-			logger.info("Alimentos findAll():");
-			logger.info("-------------------------------");
-			for (Alimento alimento : repository.findAll()) {
-				logger.info(alimento.toString());
-			}
-			logger.info("-------------------------------");
-
-			Alimento alimento = repository.findById(1).orElse(null);
-			logger.info("Alimento findById(1):");
-			logger.info("--------------------------------");
-			logger.info(alimento.toString());
-			logger.info("-------------------------------");
-
-			logger.info("Alimentos findByNombreContainingIgnoreCase('a'):");
-			logger.info("------------------------------------------------------------");
-			for (Alimento a : repository.findByNombreContainingIgnoreCase("e")) {
-				logger.info(a.toString());
-			}
-		};
-	}
 }
