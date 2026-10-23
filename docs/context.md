@@ -20,7 +20,7 @@ En Plan se edita la planficación diaria de las 2 comidas para una semana.
 En Platos se edita la composición de alimentos de cada plato y se borran o añaden nuevos platos.
 En Alimentos se modifica el tipo o nombre de cada alimento y se borran o añaden nuevos alimentos.
 ## Tarea
-Crea cada una de las páginas que componen el Frontend de la Web: Plan, platos y alimentos. Todas las operaciones (creación, modificación, borrado, renombrado, etc.) deben realizar llamadas al backend. Si una llamada al backend falla no debe actualizarse la interfaz, saltando un aviso con un mensaje que indique que no ha podido reflejarse el cambio en la base de datos. Mantén coherencia de funcionamiento y aspecto para todo lo que realice operaciones similares (e.g. cuadro de texto para filtros parciales, botón de borrar, botón de añadir, etc.).
+Crea cada una de las páginas que componen el Frontend de la Web: Plan, platos y alimentos. Todas las operaciones (creación, modificación, borrado, renombrado, etc.) deben realizar llamadas al backend. Si una llamada al backend falla no debe actualizarse la interfaz, saltando un aviso con un mensaje que indique que no ha podido reflejarse el cambio en la base de datos. Mantén coherencia de funcionamiento y aspecto para todo lo que realice operaciones similares (e.g. cuadro de texto para filtros parciales, botón de borrar, botón de añadir, etc.). Asume que el usuario ya está logueado y que el backend ya sabe qué usuario es.
 - Página Plan
     1. La parte superior izquierda indica los datos que se muestran a qué semana natural (Lunes a Domingo) corresponden. Ejemplo: `19/10/2026 a 25/10/2026`
     2. La parte superior derecha añade un botón para pasar a la semana previa y otro para la semana siguiente. Utiliza iconos de flechas hacia la izquierda (semana previa) o derecha (semana siguiente)
@@ -42,18 +42,11 @@ Crea cada una de las páginas que componen el Frontend de la Web: Plan, platos y
     2. Arriba a la derecha hay un cuadro de texto que sirve de filtro para búsquedas parciales por nombre de alimento. Similar al de la página Plan, al cambiar el foco al cuadro deben salir como sugerencias seleccionables en un menú desplegable los alimentos de cuyo nombre el texto sea coincidencia parcial ignorando mayúsculas. Si no hay coincidencias, el desplegable debe contener una opción con un icono para añadir alimento nuevo (e.g. un "+"), que tendrá como nombre el contenido actual del cuadro de texto
     3. Cada alimento se muestra en un bloque con una primera fila con el nombre del alimento y su tipo, editable al clickear sobre él y se guardará en base de datos
     4. Al final de cada fila de alimento hay un icono de "x" para borrar el alimento
-
-### Backend
 ## Restricciones y reglas
-Racha:
-- Un día cuenta si tiene al menos una sesión.
-- La racha son los días consecutivos con sesión que terminan hoy.
-- Si hoy todavía no he estudiado pero ayer sí, la racha sigue viva: no se rompe hasta que
-termina el día.
-- Usa siempre la fecha local del usuario, nunca UTC.
+- Avisa al usuario si una operación no se ha podido realizar en la base de datos, sin actualizar la interfaz.
 Técnicas:
-- HTML, CSS y JavaScript, sin frameworks, sin librerías y sin compilar nada.
-- Solo tres archivos: index.html, styles.css y app.js.
+- HTML, CSS y JavaScript, sin frameworks y sin compilar nada.
+- Los archivos justos: index.html, un html por página, styles.css y app.js.
 - Tiene que funcionar abriendo index.html con doble clic, sin servidor ni instalación.
 - No añadas nada que no aparezca en este mensaje.
 - Diseño limpio y moderno, que se vea bien en el móvil.
