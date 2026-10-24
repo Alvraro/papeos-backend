@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Papeos · Platos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="platos">
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Papeos, página de inicio"><span class="brand-mark">p.</span><span>Papeos</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a class="nav-link" href="plan.html">Plan</a><a class="nav-link active" href="platos.html">Platos</a><a class="nav-link" href="alimentos.html">Alimentos</a>
+      </nav>
+    </header>
+    <main>
+      <section class="page-heading library-heading">
+        <div><p class="eyebrow">Tu recetario</p><h1>Platos</h1><p class="subheading">Guarda los platos que te gustan y sus ingredientes.</p></div>
+        <div class="search-area">
+          <label class="sr-only" for="dish-search">Buscar o crear plato</label>
+          <input id="dish-search" class="search-input" type="search" placeholder="Buscar o crear plato…" autocomplete="off">
+          <div id="dish-suggestions" class="suggestions" role="listbox" hidden></div>
+        </div>
+      </section>
+      <div id="dish-status" class="status-message" role="status"></div>
+      <section id="dish-list" class="card-list" aria-label="Listado de platos"></section>
+    </main>
+  </div>
+</body>
+</html>

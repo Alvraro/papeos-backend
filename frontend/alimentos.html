@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Papeos · Alimentos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="alimentos">
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Papeos, página de inicio"><span class="brand-mark">p.</span><span>Papeos</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a class="nav-link" href="plan.html">Plan</a><a class="nav-link" href="platos.html">Platos</a><a class="nav-link active" href="alimentos.html">Alimentos</a>
+      </nav>
+    </header>
+    <main>
+      <section class="page-heading library-heading">
+        <div><p class="eyebrow">Lo que tienes en casa</p><h1>Alimentos</h1><p class="subheading">Administra los alimentos y su tipo.</p></div>
+        <div class="search-area">
+          <label class="sr-only" for="food-search">Buscar o crear alimento</label>
+          <input id="food-search" class="search-input" type="search" placeholder="Buscar o crear alimento…" autocomplete="off">
+          <div id="food-suggestions" class="suggestions" role="listbox" hidden></div>
+        </div>
+      </section>
+      <div id="food-status" class="status-message" role="status"></div>
+      <section id="food-list" class="card-list" aria-label="Listado de alimentos"></section>
+      <datalist id="food-types"></datalist>
+    </main>
+  </div>
+</body>
+</html>
