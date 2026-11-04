@@ -1,4 +1,4 @@
-package com.alvraro.papeos_backend;
+package com.alvraro.papeos_backend.controller;
 
 import java.util.List;
 
@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.alvraro.papeos_backend.model.Alimento;
+import com.alvraro.papeos_backend.repository.AlimentoRepository;
 
 @RestController
 @RequestMapping("/alimentos")

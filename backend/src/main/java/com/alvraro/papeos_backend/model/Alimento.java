@@ -1,4 +1,4 @@
-package com.alvraro.papeos_backend;
+package com.alvraro.papeos_backend.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
