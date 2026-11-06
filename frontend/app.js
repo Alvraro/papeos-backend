@@ -1,19 +1,17 @@
 const API_BASE = "http://localhost:8080";
 
-// Los controladores de platos y comidas aún no están presentes en el backend.
-// Estas rutas siguen el mismo patrón CRUD que el controlador de alimentos.
 const API = {
   foods: "/alimentos",
   dishes: "/platos",
   meals: "/comidas"
 };
 
-const FOOD_TYPES = ["Vegetal", "Carne", "Pescado", "Legumbre", "Cereal", "Lácteo", "Otro"];
 const WEEKDAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 let foods = [];
 let dishes = [];
 let meals = [];
+let foodCategories = [];
 let weekStart = mondayOf(new Date());
 
 const byId = (id) => document.getElementById(id);
@@ -60,12 +58,27 @@ async function loadDishes(search = "") {
 
 function foodName(food) { return food.nombre ?? food.name ?? ""; }
 function foodType(food) {
-  return food.tipo ?? food.tipoAlimento ?? food.categoria?.nombre ?? food.categoria ?? food.type ?? FOOD_TYPES[FOOD_TYPES.length - 1];
+  return food.categoria?.nombre ?? food.tipo ?? food.tipoAlimento ?? food.categoria ?? food.type ?? "";
 }
 function dishName(dish) { return dish.nombre ?? dish.name ?? ""; }
 function dishFoods(dish) { return dish.alimentos ?? dish.foods ?? dish.ingredientes ?? []; }
 function dishId(dish) { return dish.id ?? dish.platoId; }
 function foodId(food) { return food.id ?? food.alimentoId; }
+
+function dishPayload(dish, changes = {}) {
+  const { comidas, ...fields } = dish;
+  const alimentos = changes.alimentos ?? dishFoods(dish);
+  return {
+    ...fields,
+    ...changes,
+    alimentos: alimentos.map(({ platos, ...food }) => food)
+  };
+}
+
+function foodPayload(food, changes = {}) {
+  const { platos, ...fields } = food;
+  return { ...fields, ...changes };
+}
 
 function mondayOf(date) {
   const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -76,6 +89,20 @@ function mondayOf(date) {
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function weekQuery() {
+  const end = new Date(weekStart);
+  end.setDate(end.getDate() + 6);
+  return {
+    desde: dateKey(weekStart).replace(/-/g, "/"),
+    hasta: dateKey(end).replace(/-/g, "/")
+  };
+}
+
+async function loadMealsForWeek() {
+  const result = await request(`${API.meals}/get`, { method: "POST", query: weekQuery() });
+  return Array.isArray(result) ? result : [];
 }
 
 function displayDate(date) {
@@ -160,10 +187,9 @@ function showSuggestions(container, items, getName, onChoose, query, createLabel
 
 function mealPayload(row, dish) {
   return {
-    fecha: row.dataset.date,
-    tipoComida: row.dataset.type,
-    platoId: dishId(dish),
-    plato: dish
+    fecha: `${row.dataset.date}T00:00:00.000Z`,
+    tipo: row.dataset.type.toUpperCase(),
+    platos: [{ id: dishId(dish) }]
   };
 }
 
@@ -252,11 +278,7 @@ function wirePlan() {
 async function changeWeek(offset) {
   weekStart.setDate(weekStart.getDate() + offset);
   try {
-    const mealsResponse = await request(`${API.meals}/search`, {
-      method: "POST",
-      body: { desde: dateKey(weekStart), hasta: dateKey(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6)) }
-    });
-    meals = Array.isArray(mealsResponse) ? mealsResponse : [];
+    meals = await loadMealsForWeek();
     renderPlan();
   } catch (error) {
     weekStart.setDate(weekStart.getDate() - offset);
@@ -362,10 +384,16 @@ function wireDishList() {
     }
     if (event.target.closest(".remove-ingredient")) {
       const row = event.target.closest(".ingredient-row");
+      const dish = dishes.find((item) => String(dishId(item)) === card.dataset.dishId);
       try {
-        await request(`${API.dishes}/alimentos/delete`, { method: "DELETE", query: { platoId: card.dataset.dishId, alimentoId: row.dataset.foodId } });
+        const updated = await request(`${API.dishes}/update`, {
+          method: "POST",
+          body: dishPayload(dish, {
+            alimentos: dishFoods(dish).filter((food) => String(foodId(food)) !== row.dataset.foodId)
+          })
+        });
         dishes = dishes.map((dish) => String(dishId(dish)) === card.dataset.dishId
-          ? { ...dish, alimentos: dishFoods(dish).filter((food) => String(foodId(food)) !== row.dataset.foodId) }
+          ? updated
           : dish);
         renderDishes();
       } catch (error) { notifyFailure(error); }
@@ -382,7 +410,7 @@ async function saveDishName(input) {
     return;
   }
   try {
-    const saved = await request(`${API.dishes}/update`, { method: "POST", body: { ...dish, nombre: name } });
+    const saved = await request(`${API.dishes}/update`, { method: "POST", body: dishPayload(dish, { nombre: name }) });
     dishes = dishes.map((item) => String(dishId(item)) === card.dataset.dishId ? saved : item);
     renderDishes();
   } catch (error) {
@@ -393,23 +421,40 @@ async function saveDishName(input) {
 
 async function addFoodToDish(input, food) {
   const card = input.closest(".item-card");
+  let createdFood = null;
   try {
     let selected = food;
     if (!selected) {
       const name = input.value.trim();
       if (!name) return;
-      selected = await request(`${API.foods}/create`, { method: "POST", body: { nombre: name } });
+      selected = await createFoodRecord(name);
+      if (!selected) return;
+      createdFood = selected;
     }
-    const updated = await request(`${API.dishes}/alimentos/create`, {
-      method: "POST", body: { platoId: card.dataset.dishId, alimentoId: foodId(selected) }
+    const dish = dishes.find((item) => String(dishId(item)) === card.dataset.dishId);
+    const updated = await request(`${API.dishes}/update`, {
+      method: "POST",
+      body: dishPayload(dish, { alimentos: [...dishFoods(dish), selected] })
     });
+    if (createdFood) {
+      foods = [...foods, createdFood];
+      categoriesFromFoods();
+    }
     dishes = dishes.map((dish) => String(dishId(dish)) === card.dataset.dishId
-      ? (updated && typeof updated === "object" && dishId(updated) !== undefined
-        ? updated
-        : { ...dish, alimentos: [...dishFoods(dish), selected] })
+      ? updated
       : dish);
     renderDishes();
-  } catch (error) { notifyFailure(error); }
+  } catch (error) {
+    if (createdFood) {
+      try {
+        await request(`${API.foods}/delete`, { method: "DELETE", query: { id: foodId(createdFood) } });
+      } catch (cleanupError) {
+        notifyFailure(new Error(`${error.message}\nNo se pudo deshacer la creación del alimento: ${cleanupError.message}`));
+        return;
+      }
+    }
+    notifyFailure(error);
+  }
 }
 
 function buildFoodCard(food) {
@@ -459,8 +504,10 @@ function wireFoodSearch() {
 }
 
 async function createFood(name) {
-  const saved = await request(`${API.foods}/create`, { method: "POST", body: { nombre: name, tipo: FOOD_TYPES[FOOD_TYPES.length - 1] } });
+  const saved = await createFoodRecord(name);
+  if (!saved) return;
   foods = [...foods, saved];
+  categoriesFromFoods();
   renderFoods();
   byId("food-search").value = "";
 }
@@ -481,9 +528,16 @@ function wireFoodList() {
     const card = event.target.closest(".food-card");
     const food = foods.find((item) => String(foodId(item)) === card.dataset.foodId);
     const oldType = foodType(food);
+    const category = categoriesFromFoods().find((item) => item.nombre.toLocaleLowerCase("es") === event.target.value.trim().toLocaleLowerCase("es"));
+    if (!category) {
+      event.target.value = oldType;
+      window.alert("Ese tipo no existe en la base de datos. Selecciona una categoría disponible.");
+      return;
+    }
     try {
-      const saved = await request(`${API.foods}/update`, { method: "POST", body: { ...food, tipo: event.target.value } });
+      const saved = await request(`${API.foods}/update`, { method: "POST", body: foodPayload(food, { categoria: category }) });
       foods = foods.map((item) => String(foodId(item)) === card.dataset.foodId ? saved : item);
+      byId("food-types").innerHTML = categoriesFromFoods().map((item) => `<option value="${escapeHtml(item.nombre)}"></option>`).join("");
       renderFoods();
     } catch (error) {
       event.target.value = oldType;
@@ -511,7 +565,7 @@ async function saveFood(input) {
     return;
   }
   try {
-    const saved = await request(`${API.foods}/update`, { method: "POST", body: { ...food, nombre: name } });
+    const saved = await request(`${API.foods}/update`, { method: "POST", body: foodPayload(food, { nombre: name }) });
     foods = foods.map((item) => String(foodId(item)) === card.dataset.foodId ? saved : item);
     renderFoods();
   } catch (error) {
@@ -520,15 +574,39 @@ async function saveFood(input) {
   }
 }
 
+function categoriesFromFoods() {
+  const byCategoryId = new Map(foodCategories.map((category) => [String(category.id), category]));
+  foods.forEach((food) => {
+    if (food.categoria?.id !== undefined) byCategoryId.set(String(food.categoria.id), food.categoria);
+  });
+  foodCategories = [...byCategoryId.values()].sort((first, second) => first.nombre.localeCompare(second.nombre, "es"));
+  return foodCategories;
+}
+
+function chooseExistingCategory() {
+  const categories = categoriesFromFoods();
+  if (!categories.length) {
+    throw new Error("No se pueden crear alimentos: el backend no ofrece categorías y todavía no hay ninguna disponible.");
+  }
+  if (categories.length === 1) return categories[0];
+  const names = categories.map((category) => category.nombre).join(", ");
+  const selectedName = window.prompt(`Indica una categoría existente (${names}):`, categories[0].nombre);
+  if (selectedName === null) return null;
+  const category = categories.find((item) => item.nombre.toLocaleLowerCase("es") === selectedName.trim().toLocaleLowerCase("es"));
+  if (!category) throw new Error("Selecciona una categoría existente para crear el alimento.");
+  return category;
+}
+
+async function createFoodRecord(name) {
+  const category = chooseExistingCategory();
+  if (!category) return null;
+  const saved = await request(`${API.foods}/create`, { method: "POST", body: { nombre: name, categoria: category } });
+  return saved;
+}
+
 async function initializePlan() {
   try {
-    [dishes, meals] = await Promise.all([
-      loadDishes(),
-      request(`${API.meals}/search`, {
-        method: "POST",
-        body: { desde: dateKey(weekStart), hasta: dateKey(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6)) }
-      }).then((result) => Array.isArray(result) ? result : [])
-    ]);
+    [dishes, meals] = await Promise.all([loadDishes(), loadMealsForWeek()]);
     wirePlan();
     renderPlan();
   } catch (error) {
@@ -552,7 +630,8 @@ async function initializeDishes() {
 async function initializeFoods() {
   try {
     foods = await loadFoods();
-    byId("food-types").innerHTML = FOOD_TYPES.map((type) => `<option value="${escapeHtml(type)}"></option>`).join("");
+    categoriesFromFoods();
+    byId("food-types").innerHTML = categoriesFromFoods().map((category) => `<option value="${escapeHtml(category.nombre)}"></option>`).join("");
     renderFoods();
     wireFoodSearch();
     wireFoodList();
