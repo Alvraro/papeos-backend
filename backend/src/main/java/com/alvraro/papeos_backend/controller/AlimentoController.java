@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alvraro.papeos_backend.model.Alimento;
@@ -20,13 +21,17 @@ public class AlimentoController {
 	private AlimentoRepository alimentoRepository;
 
 	@PostMapping("/create")
-	public ResponseEntity<Alimento> createAlimento(@RequestBody Alimento alimento) {
-		Alimento savedAlimento = alimentoRepository.save(alimento);
-		return ResponseEntity.ok(savedAlimento);
+	public ResponseEntity<String> createAlimento(@RequestBody Alimento alimento) {
+		return alimentoRepository.findByNombre(alimento.getNombre()).map(_ -> {
+			return ResponseEntity.badRequest().body("Alimento with the same nombre already exists");
+		}).orElseGet(() -> {
+			alimentoRepository.save(alimento);
+			return ResponseEntity.ok().build();
+		});
 	}
 
 	@PostMapping("/get")
-	public ResponseEntity<Alimento> getAlimentoById(Integer id) {
+	public ResponseEntity<Alimento> getAlimentoById(@RequestParam Integer id) {
 		return alimentoRepository
 			.findById(id)
 			.map(ResponseEntity::ok)
@@ -35,7 +40,8 @@ public class AlimentoController {
 
 	@PostMapping("/search")
 	public ResponseEntity<List<Alimento>> findByNombreContainingIgnoreCase(@RequestBody String partialName) {
-		return ResponseEntity.ok(alimentoRepository.findByNombreContainingIgnoreCase(partialName));
+		List<Alimento> listAlimentos = alimentoRepository.findByNombreContainingIgnoreCase(partialName);
+		return ResponseEntity.ok(listAlimentos);
 	}
 
 	@PostMapping("/update")

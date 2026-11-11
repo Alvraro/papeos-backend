@@ -15,6 +15,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -22,6 +24,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
+@RequiredArgsConstructor
 @AllArgsConstructor
 @ToString
 @Table(name = "alimentos")
@@ -30,7 +33,8 @@ public class Alimento {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@Column
+	@Column(unique = true, nullable = false)
+	@NonNull
 	private String nombre;
 
 	@ManyToOne

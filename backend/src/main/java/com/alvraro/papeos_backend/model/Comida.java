@@ -35,7 +35,7 @@ public class Comida {
 	@Column
 	Date fecha;
 	
-	@Column(columnDefinition = "'comida','cena'")
+	@Column
 	@Enumerated(EnumType.STRING)
 	TipoComida tipo;
 	
