@@ -38,8 +38,15 @@ public class AlimentoController {
 			.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
+	@PostMapping("/get-all")
+	public ResponseEntity<List<Alimento>> getAllAlimentos() {
+		return ResponseEntity.ok(alimentoRepository.findAll());
+	}
+	
 	@PostMapping("/search")
-	public ResponseEntity<List<Alimento>> findByNombreContainingIgnoreCase(@RequestBody String partialName) {
+	public ResponseEntity<List<Alimento>> findByNombreContainingIgnoreCase(@RequestBody(required = false) String partialName) {
+		if(partialName == null || partialName.isBlank())
+			return ResponseEntity.ok(alimentoRepository.findAll());
 		List<Alimento> listAlimentos = alimentoRepository.findByNombreContainingIgnoreCase(partialName);
 		return ResponseEntity.ok(listAlimentos);
 	}
